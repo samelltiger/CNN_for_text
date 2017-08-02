@@ -34,7 +34,7 @@ class Weighted_CNN(object):
         # weight conv parameters
         W_W = self.orthogonal([self.fsize, self.max_height, self.channel, self.fnumber])
         b_W = tf.Variable(tf.constant(0.001, shape=shape))
-        # context conv
+        # weight conv
         W_conv  = tf.nn.softmax(tf.nn.conv2d(self.incoming, W_C, strides=[1, 1, 1, 1], padding="VALID") + b_C)   
         
         # weighted conv
