@@ -4,7 +4,7 @@ class Weighted_CNN(object):
     """
     create parameters and step function
     """
-    def __init__(self, incoming,max_height,channel, fsize, fnumber,):
+    def __init__(self, incoming,max_height,channel, fsize, fnumber):
         
         def orthogonal(self, shape,scale = 1.0):
             #https://github.com/Lasagne/Lasagne/blob/master/lasagne/init.py
