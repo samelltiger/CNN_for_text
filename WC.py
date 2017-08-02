@@ -1,3 +1,5 @@
+import tensorflow as tf
+import numpy as np
 class Weighted_CNN(object):
     """
     create parameters and step function
