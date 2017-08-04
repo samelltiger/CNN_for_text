@@ -1,5 +1,3 @@
-import tensorflow as tf
-import numpy as np
 class Weighted_CNN(object):
     """
     Build a CNN with weighted average pooling
@@ -16,9 +14,13 @@ class Weighted_CNN(object):
         [fsize, height]
     fnumber : int
         The number of CNN filters
-    Returns : Tensor
+    gate_init : tf activation function
+        default: tf.nn.softmax
+    self.output : Tensor
         The processed 2D-tensor whose shape is 
         [batch_size, fnumber]
+    self.L2 : Tensor
+        L2 of weights
     -------
     """
     def orthogonal(self, shape,scale = 1.0):
@@ -32,7 +34,7 @@ class Weighted_CNN(object):
     def weight_init(self, shape):
         initial = tf.random_uniform(shape,minval=-np.sqrt(5)*np.sqrt(1.0/shape[0]), maxval=np.sqrt(5)*np.sqrt(1.0/shape[0]))
         return tf.Variable(initial,trainable=True)
-    def __init__(self, incoming, input_shape, fsize, fnumber):
+    def __init__(self, incoming, input_shape, fsize, fnumber, gate_init=tf.nn.softmax):
         
         # var
         self.incoming = incoming
@@ -42,20 +44,25 @@ class Weighted_CNN(object):
         self.depth = self.input_shape[-1]
         self.fsize = fsize
         self.fnumber = fnumber
+        self.gate_init = gate_init
         
         # context conv parameters
         W_C = self.weight_init([self.fsize, self.width, self.depth, self.fnumber])
         b_C = tf.Variable(tf.constant(0.001, shape=[self.fnumber]))
         # context conv
         C_conv  = tf.nn.relu(tf.nn.conv2d(self.incoming, W_C, strides=[1, 1, 1, 1], padding="VALID") + b_C)
-        # output shape: (batch, height-fsize+1, 1, fnumber)
+        # output shape: (batch, max_height-fsize+1, 1, fnumber)
 
         # weight conv parameters
-        W_W = self.orthogonal([self.fsize, self.width, self.depth, self.fnumber])
+        W_W = self.weight_init([self.fsize, self.width, self.depth, self.fnumber])
         b_W = tf.Variable(tf.constant(0.001, shape=[self.fnumber]))
         # weight conv
-        W_conv  = tf.nn.softmax((tf.nn.conv2d(self.incoming, W_W, strides=[1, 1, 1, 1], padding="VALID") + b_W), dim=1)   
-        # output shape: (batch, height-fsize+1, 1, fnumber)
+        W_conv_pre  = (tf.nn.conv2d(self.incoming, W_W, strides=[1, 1, 1, 1], padding="VALID") + b_W) 
+        if self.gate_init == tf.nn.softmax:
+            W_conv = self.gate_init(W_conv_pre, dim = 1)
+        else:
+            W_conv = self.gate_init(W_conv_pre)
+        # output shape: (batch, self.height-fsize+1, 1, fnumber)
 
         # weighted conv
         weighted_conv = C_conv*W_conv
