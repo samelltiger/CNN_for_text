@@ -5,7 +5,7 @@
 * the number of filters: 32
 
 ```
-rom wpcnn import Weighted_CNN
+from wpcnn import Weighted_CNN
 
 inputs = tf.placeholder(tf.float32, [None, HEIGHT, WIDTH, DEPTH])
 wpcnn1=Weighted_CNN(incoming=inputs, input_shape=[HEIGHT, WIDTH, DEPTH], fsize=2, fnumber=32)
