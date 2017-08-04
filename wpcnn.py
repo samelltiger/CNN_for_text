@@ -48,14 +48,14 @@ class Weighted_CNN(object):
         b_C = tf.Variable(tf.constant(0.001, shape=[self.fnumber]))
         # context conv
         C_conv  = tf.nn.relu(tf.nn.conv2d(self.incoming, W_C, strides=[1, 1, 1, 1], padding="VALID") + b_C)
-        # output shape: (batch, self.max_height-self.fsize+1, 1, fnumber)
+        # output shape: (batch, height-fsize+1, 1, fnumber)
 
         # weight conv parameters
         W_W = self.orthogonal([self.fsize, self.width, self.depth, self.fnumber])
         b_W = tf.Variable(tf.constant(0.001, shape=[self.fnumber]))
         # weight conv
-        W_conv  = tf.nn.softmax((tf.nn.conv2d(self.incoming, W_W, strides=[1, 1, 1, 1], padding="VALID") + b_W),dim=1)   
-        # output shape: (batch, self.max_height-self.fsize+1, 1, fnumber)
+        W_conv  = tf.nn.softmax((tf.nn.conv2d(self.incoming, W_W, strides=[1, 1, 1, 1], padding="VALID") + b_W), dim=1)   
+        # output shape: (batch, height-fsize+1, 1, fnumber)
 
         # weighted conv
         weighted_conv = C_conv*W_conv
