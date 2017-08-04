@@ -1,8 +1,23 @@
-import tensorflow as tf
-import numpy as np
 class Weighted_CNN(object):
     """
-    create parameters and step function
+    Build a CNN with weighted average pooling
+    Parameters
+    ----------
+    incoming : Tensor
+        The 4D-tensor to be processed whose shape is
+        [batch_size, width, height, depth]
+    input_shape: 3-element list
+        The height, width, depth of incoming data:
+        [height, width, depth]
+    fsize : int
+        The size of CNN filters
+        [fsize, height]
+    fnumber : int
+        The number of CNN filters
+    Returns : Tensor
+        The processed 2D-tensor whose shape is 
+        [batch_size, fnumber]
+    -------
     """
     def orthogonal(self, shape,scale = 1.0):
         #https://github.com/Lasagne/Lasagne/blob/master/lasagne/init.py
@@ -15,27 +30,26 @@ class Weighted_CNN(object):
     def weight_init(self, shape):
         initial = tf.random_uniform(shape,minval=-np.sqrt(5)*np.sqrt(1.0/shape[0]), maxval=np.sqrt(5)*np.sqrt(1.0/shape[0]))
         return tf.Variable(initial,trainable=True)
-    def __init__(self, incoming, max_height, max_width, nchannel, fsize, fnumber):
-        
-
+    def __init__(self, incoming, input_shape, fsize, fnumber):
         
         # var
         self.incoming = incoming
-        self.max_width = max_width
-        self.max_height = max_height
-        self.nchannel = nchannel
+        self.input_shape = input_shape
+        self.height = self.input_shape[-3]
+        self.width = self.input_shape[-2]
+        self.depth = self.input_shape[-1]
         self.fsize = fsize
         self.fnumber = fnumber
         
         # context conv parameters
-        W_C = self.weight_init([self.fsize, self.max_width, self.nchannel, self.fnumber])
+        W_C = self.weight_init([self.fsize, self.width, self.depth, self.fnumber])
         b_C = tf.Variable(tf.constant(0.001, shape=[self.fnumber]))
         # context conv
         C_conv  = tf.nn.relu(tf.nn.conv2d(self.incoming, W_C, strides=[1, 1, 1, 1], padding="VALID") + b_C)
         # output shape: (batch, self.max_height-self.fsize+1, 1, fnumber)
 
         # weight conv parameters
-        W_W = self.orthogonal([self.fsize, self.max_width, self.nchannel, self.fnumber])
+        W_W = self.orthogonal([self.fsize, self.width, self.depth, self.fnumber])
         b_W = tf.Variable(tf.constant(0.001, shape=[self.fnumber]))
         # weight conv
         W_conv  = tf.nn.softmax(tf.nn.conv2d(self.incoming, W_W, strides=[1, 1, 1, 1], padding="VALID") + b_W)   
@@ -45,7 +59,7 @@ class Weighted_CNN(object):
         weighted_conv = C_conv*W_conv
         # weighted pooling
         print("using weighted average pooling CNN")
-        weighted_conv_reshape = tf.reshape(weighted_conv, [-1, self.max_height-self.fsize+1, self.fnumber])
+        weighted_conv_reshape = tf.reshape(weighted_conv, [-1, self.height-self.fsize+1, self.fnumber])
         self.output = tf.reduce_sum(weighted_conv_reshape, axis=1)
         # L2
         self.L2 = tf.nn.l2_loss(W_C)+tf.nn.l2_loss(W_W)
