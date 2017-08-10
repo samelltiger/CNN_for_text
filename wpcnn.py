@@ -11,7 +11,7 @@ class Weighted_CNN(object):
         [height, width, depth]
     fsize : int
         The size of CNN filters
-        [fsize, height]
+        [fsize, width]
     fnumber : int
         The number of CNN filters
     gate_init : tf activation function
